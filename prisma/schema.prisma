@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// enum example
+enum Status {
+  ACTIVE
+  DELETED
+}
+
+enum MemoStatus {
+  PENDING
+}
+
+// model Testing {
+//   id Int @default(autoincrement()) @id
+//   status ExampleStatus @default(ACTIVE)
+// }
+
+// prisma.testing.create({data: {s})
+//https://www.prisma.io/docs/concepts/components/prisma-schema/relations#relation-fields-1
+
+model User {
+  id Int @default(autoincrement()) @id
+  name String
+  department Department @relation("UserDepartment", fields: [departmentId], references: [id])
+  jobTitle String
+  company Company @relation("UserCompany", fields: [companyId], references: [id])
+  createdOn DateTime @default(now())
+  updatedOn DateTime?
+  createdBy User? @relation("CreatedByUser", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy User? @relation("UpdatedByUser", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy User? @relation("DeletedByUser", fields: [deletedById], references: [id])
+  deletedById Int?
+  deletedOn DateTime?
+  status Status @default(ACTIVE)
+
+  departmentId Int @unique
+  companyId Int @unique
+  
+  // approvals MemoApproval[]
+  memos Memo[]
+  memocc MemoCcUser[]
+  createdDepartment Department[] @relation("CreatedByDepartment")
+  updatedDepartment Department[] @relation("UpdatedByDepartment")
+  deletedDepartment Department[] @relation("DeletedByDepartment")
+  createdUser User[] @relation("CreatedByUser")
+  updatedUser User[] @relation("UpdatedByUser")
+  deletedUser User[] @relation("DeletedByUser")
+  createdCompany Company[] @relation("CreatedByCompany")
+  updatedCompany Company[] @relation("UpdatedByCompany")
+  deletedCompany Company[] @relation("DeletedByCompany")
+  createdMemo Memo[] @relation("CreatedByMemo")
+  createdProject Project[] @relation("CreatedByProject")
+  updatedProject Project[] @relation("UpdatedByProject")
+  deletedProject Project[] @relation("DeletedByProject")
+  createdMemoType MemoType[] @relation("CreatedByMemoType")
+  updatedMemoType MemoType[] @relation("UpdatedByMemoType")
+  deletedMemoType MemoType[] @relation("DeletedByMemoType")
+  memoAttachmentUser MemoAttachment[] @relation("MemoAttachmentUser")
+  memoCommentUser MemoComment[] @relation("MemoCommentUser")
+  groupUser Group[] @relation("GroupUser")
+  
+}
+
+model Department {
+  id Int @default(autoincrement()) @id
+  name String
+  createdOn DateTime @default(now())
+  updatedOn DateTime?
+  status Status @default(ACTIVE)
+  createdBy User? @relation("CreatedByDepartment", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy User? @relation("UpdatedByDepartment", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy User? @relation("DeletedByDepartment", fields: [deletedById], references: [id])
+  deletedById Int?
+  deletedOn DateTime?
+
+  users User[] @relation("UserDepartment")
+  memo Memo?
+  
+}
+
+model Company {
+  id Int @default(autoincrement()) @id
+  name String
+  createdOn DateTime @default(now())
+  updatedOn DateTime?
+  status Status @default(ACTIVE)
+  createdBy User? @relation("CreatedByCompany", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy User? @relation("UpdatedByCompany", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy User? @relation("DeletedByCompany", fields: [deletedById], references: [id])
+  deletedById Int?
+  deletedOn DateTime?
+
+  users User[] @relation("UserCompany")
+  memo Memo?
+}
+
+model Project {
+  id Int @default(autoincrement()) @id
+  name String
+  createdOn DateTime @default(now())
+  updatedOn DateTime?
+  createdBy User? @relation("CreatedByProject", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy User? @relation("UpdatedByProject", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy User? @relation("DeletedByProject", fields: [deletedById], references: [id])
+  deletedById Int?
+  deletedOn DateTime?
+  status Status @default(ACTIVE)
+  
+  memo Memo? @relation("MemoProject")  
+  
+}
+
+model MemoType {
+  id Int @default(autoincrement()) @id
+  name String
+  createdOn DateTime? @default(now())
+  updatedOn DateTime?
+  createdBy User? @relation("CreatedByMemoType", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy User? @relation("UpdatedByMemoType", fields: [updatedById], references: [id])
+  updatedById Int?
+  deletedBy User? @relation("DeletedByMemoType", fields: [deletedById], references: [id])
+  deletedById Int?
+  deletedOn DateTime?
+  status Status @default(ACTIVE)
+  memo Memo? @relation("MemoType")
+  
+}
+
+model Memo {
+  id Int @default(autoincrement()) @id
+  addressTo String
+  from String
+  department Department @relation(fields: [departmentId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+  project Project? @relation("MemoProject", fields: [projectId], references: [id])
+  memoType MemoType @relation("MemoType", fields: [memoTypeId], references: [id])
+  createdOn DateTime @default(now())
+  updatedOn DateTime @default(now())
+  submittedOn DateTime?
+  createdBy User? @relation("CreatedByMemo", fields: [userId], references: [id])
+  status Status @default(ACTIVE)
+  subject String
+  content String @db.LongText
+  executiveChairman Boolean?
+
+  departmentId Int @unique
+  companyId Int @unique
+  userId Int
+  projectId Int @unique
+  memoTypeId Int @unique
+  
+  approvals MemoApproval[]
+  memocc User[] 
+  attachments MemoAttachment[]
+  ccusers MemoCcUser[] @relation("MemoCcUserId")
+}
+
+model MemoApproval {
+  id Int @default(autoincrement()) @id
+  memo Memo? @relation(fields: [memoId], references: [id])
+  group Group? @relation(fields: [groupId], references: [id])
+  // user User @relation(fields: [userId], references: [id])
+  order Int
+  memoStatus MemoStatus @default(PENDING)
+
+  memoId Int @unique
+  groupId Int @unique
+  // userId Int 
+
+}
+
+model MemoAttachment {
+  id Int @default(autoincrement()) @id
+  memo Memo? @relation(fields: [memoId], references: [id])
+  user User @relation("MemoAttachmentUser", fields: [userId], references: [id])
+  url String
+  gspath String
+  fileName String
+
+  memoId Int @unique
+  userId Int
+}
+
+model Group {
+  id Int @default(autoincrement()) @id
+  name String
+  users User[] @relation("GroupUser")
+
+  approvals MemoApproval[]
+}
+
+model MemoCcUser {
+  id Int @default(autoincrement()) @id
+  memo Memo @relation("MemoCcUserId", fields: [memoId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+
+  memoId Int @unique
+  userId Int
+
+}
+
+model MemoComment {
+  id Int @default(autoincrement()) @id
+  comments String
+  users User[] @relation("MemoCommentUser")
+
+}
+
+// model test {
+//   id Int @default(autoincrement()) @id
+//   name String
+//   age String @default(0)
+// }
+
+// this.prisma.test.create({data: {name: 'BoB', age: '26'}});
+// this.prisma.test.create({data: {name: 'BoB'}});
+
+
+
+// Attachments
+// url
+// name
+// gspath /ememo/uadifasdifsaidf.pdf
+
+// model SubjectContentDetails {
+//   id Int @default(autoincrement()) @id
+//   memoDetails Memo @relation(fields: [memoDetailsId], references: [id])
+//   memoDetailsId Int 
+//   subjectTitle String
+//   subjectContent String
+//   subjectAttachment String?
+//   // approvalFlowDetails ApprovalFlowDetails?
+//   approvals ApprovalFlowDetails[]
+// }
+
+// model ApprovalFlowDetails {
+//   id Int @default(autoincrement()) @id
+//   subjectContentDetails SubjectContentDetails @relation(fields: [subjectContentId], references: [id])
+//   subjectContentId Int @unique
+//   approver User? @relation("Approver", fields: [approverUserId], references: [id])
+//   approverUserId Int?
+//   ccApprover User? @relation("CcApprover", fields: [ccApproverUserId], references: [id])
+//   ccApproverUserId Int?
+//   daysToApprove String
+//   executiveChairmanUserId User @relation("ExecutiveChairman", fields: [executiveUserId], references: [id])
+//   executiveUserId Int
+// }
+
