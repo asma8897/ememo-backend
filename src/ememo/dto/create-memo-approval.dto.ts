@@ -1,6 +1,10 @@
 export class CreateMemoApprovalDto {
+    // memoId: number;
+    // groupId: number;
     memoId: number;
-    groupId: number;
     order: number;
-    memoStatus: "PENDING";
+    // memoStatusId: number;
+    userId: number;
+    createdOn: Date;
+    groupId: number[];
 }

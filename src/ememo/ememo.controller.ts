@@ -24,6 +24,8 @@ import { CreateMemoCCUserDto } from './dto/create-memo-cc-user.dto';
 import { UpdateMemoCCUserDto } from './dto/update-memo-cc-user.dto';
 import { CreateMemoCommentDto } from './dto/create-memo-comment.dto';
 import { UpdateMemoCommentDto } from './dto/update-memo-comment.dto';
+import { CreateMemoStatusDto } from './dto/create-memo-status.dto';
+import { UpdateMemoStatusDto } from './dto/update-memo-status.dto';
 
 @Controller('ememo')
 export class EmemoController {
@@ -39,17 +41,17 @@ export class EmemoController {
     return this.ememoService.findAllUser();
   }
 
-  @Get(':id/findOneUser')
+  @Get('/findOneUser/:id')
   findOneUser(@Param('id') id: string) {
     return this.ememoService.findOneUser({ id: +id });
   }
 
-  @Patch(':id/updateUser')
+  @Patch('/updateUser/:id')
   updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.ememoService.updateUser({ id: +id }, updateUserDto);
+    // return this.ememoService.updateUser({ id: +id }, updateUserDto);
   }
 
-  @Delete('user/:id')
+  @Delete('removeUser/:id')
   removeUser(@Param('id') id: string) {
     return this.ememoService.removeUser({ id: +id });
   }
@@ -64,17 +66,17 @@ export class EmemoController {
     return this.ememoService.findAllDepartment();
   }
 
-  @Get(':id/findOneDepartment')
+  @Get('/findOneDepartment/:id')
   findOneDepartment(@Param('id') id: string) {
     return this.ememoService.findOneDepartment({ id: +id });
   }
 
-  @Patch(':id/updateDepartment')
+  @Patch('/updateDepartment/:id')
   updateDepartment(@Param('id') id: string, @Body() updateDepartmentDto: UpdateDepartmentDto) {
     return this.ememoService.updateDepartment({ id: +id }, updateDepartmentDto);
   }
 
-  @Delete(':id/removeDepartment')
+  @Delete('/removeDepartment/:id')
   removeDepartment(@Param('id') id: string) {
     return this.ememoService.removeDepartment({ id: +id });
   }
@@ -89,17 +91,17 @@ export class EmemoController {
     return this.ememoService.findAllCompany();
   }
 
-  @Get(':id/findOneCompany')
+  @Get('/findOneCompany/:id')
   findOneCompany(@Param('id') id: string) {
     return this.ememoService.findOneCompany({ id: +id });
   }
 
-  @Patch(':id/updateCompany')
+  @Patch('/updateCompany/:id')
   updateCompany(@Param('id') id: string, @Body() updateCompanyDto: UpdateCompanyDto) {
     return this.ememoService.updateCompany({ id: +id }, updateCompanyDto);
   }
 
-  @Delete(':id/removeCompany')
+  @Delete('/removeCompany/:id')
   removeCompany(@Param('id') id: string) {
     return this.ememoService.removeCompany({ id: +id });
   }
@@ -114,17 +116,17 @@ export class EmemoController {
     return this.ememoService.findAllProject();
   }
 
-  @Get(':id/findOneProject')
+  @Get('/findOneProject/:id')
   findOneProject(@Param('id') id: string) {
     return this.ememoService.findOneProject({ id: +id });
   }
 
-  @Patch(':id/updateProject')
+  @Patch('/updateProject/:id')
   updateProject(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
     return this.ememoService.updateProject({ id: +id }, updateProjectDto);
   }
 
-  @Delete(':id/removeProject')
+  @Delete('/removeProject/:id')
   removeProject(@Param('id') id: string) {
     return this.ememoService.removeProject({ id: +id });
   }
@@ -139,17 +141,17 @@ export class EmemoController {
     return this.ememoService.findAllMemoType();
   }
 
-  @Get(':id/findOneMemoType')
+  @Get('/findOneMemoType/:id')
   findOneMemoType(@Param('id') id: string) {
     return this.ememoService.findOneMemoType({ id: +id });
   }
 
-  @Patch(':id/updateMemoType')
+  @Patch('/updateMemoType/:id')
   updateMemoType(@Param('id') id: string, @Body() updateMemoTypeDto: UpdateMemoTypeDto) {
     return this.ememoService.updateMemoType({ id: +id }, updateMemoTypeDto);
   }
 
-  @Delete(':id/removeMemoType')
+  @Delete('/removeMemoType/:id')
   removeMemoType(@Param('id') id: string) {
     return this.ememoService.removeMemoType({ id: +id });
   }
@@ -164,17 +166,17 @@ export class EmemoController {
     return this.ememoService.findAllMemo();
   }
 
-  @Get(':id/findOneMemo')
+  @Get('/findOneMemo/:id')
   findOneMemo(@Param('id') id: string) {
     return this.ememoService.findOneMemo({ id: +id });
   }
 
-  @Patch(':id')
+  @Patch('/updateMemo/:id')
   updateMemo(@Param('id') id: string, @Body() updateMemoDto: UpdateMemoDto) {
     // return this.ememoService.updateMemo({ id: +id }, updateMemoDto);
   }
 
-  @Delete(':id/removeMemo')
+  @Delete('/removeMemo/:id')
   removeMemo(@Param('id') id: string) {
     return this.ememoService.removeMemo({ id: +id });
   }
@@ -189,17 +191,17 @@ export class EmemoController {
     return this.ememoService.findAllMemoApproval();
   }
 
-  @Get(':id/findOneMemoApproval')
+  @Get('/findOneMemoApproval/:id')
   findOneMemoApproval(@Param('id') id: string) {
     return this.ememoService.findOneMemoApproval({ id: +id });
   }
 
-  @Patch(':id/updateMemoApproval')
+  @Patch('/updateMemoApproval/:id')
   updateMemoApproval(@Param('id') id: string, @Body() updateMemoApprovalDto: UpdateMemoApprovalDto) {
     return this.ememoService.updateMemoApproval({ id: +id }, updateMemoApprovalDto);
   }
 
-  @Delete(':id/removeMemoApproval')
+  @Delete('/removeMemoApproval/:id')
   removeMemoApproval(@Param('id') id: string) {
     return this.ememoService.removeMemoApproval({ id: +id });
   }
@@ -214,17 +216,17 @@ export class EmemoController {
     return this.ememoService.findAllMemoAttachment();
   }
 
-  @Get(':id/findAllMemoAttachment')
+  @Get('/findAllMemoAttachment/:id')
   findOneMemoAttachment(@Param('id') id: string) {
     return this.ememoService.findOneMemoAttachment({ id: +id });
   }
 
-  @Patch(':id/updateMemoAttachment')
+  @Patch('/updateMemoAttachment/:id')
   updateMemoAttachment(@Param('id') id: string, @Body() updateMemoAttachmentDto: UpdateMemoAttachmentDto) {
     return this.ememoService.updateMemoAttachment({ id: +id }, updateMemoAttachmentDto);
   }
 
-  @Delete(':id/removeMemoAttachment')
+  @Delete('/removeMemoAttachment/:id')
   removeMemoAttachment(@Param('id') id: string) {
     return this.ememoService.removeMemoAttachment({ id: +id });
   }
@@ -239,17 +241,17 @@ export class EmemoController {
     return this.ememoService.findAllGroup();
   }
 
-  @Get(':id/findOneGroup')
+  @Get('/findOneGroup/:id')
   findOneGroup(@Param('id') id: string) {
     return this.ememoService.findOneGroup({ id: +id });
   }
 
-  @Patch(':id/updateGroup')
+  @Patch('/updateGroup/:id')
   updateGroup(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
     return this.ememoService.updateGroup({ id: +id }, updateGroupDto);
   }
 
-  @Delete(':id/removeGroup')
+  @Delete('/removeGroup/:id')
   removeGroup(@Param('id') id: string) {
     return this.ememoService.removeGroup({ id: +id });
   }
@@ -264,17 +266,17 @@ export class EmemoController {
     return this.ememoService.findAllMemoCcUser();
   }
 
-  @Get(':id/findOneMemoCcUser')
+  @Get('/findOneMemoCcUser/:id')
   findOneMemoCcUser(@Param('id') id: string) {
     return this.ememoService.findOneMemoCcUser({ id: +id });
   }
 
-  @Patch(':id/updateMemoCcUser')
+  @Patch('/updateMemoCcUser/:id')
   updateMemoCcUser(@Param('id') id: string, @Body() updateMemoCCUserDto: UpdateMemoCCUserDto) {
     // return this.ememoService.updateMemoCcUser({ id: +id }, updateMemoCCUserDto);
   }
 
-  @Delete(':id/removeMemoCcUser')
+  @Delete('/removeMemoCcUser/:id')
   removeMemoCcUser(@Param('id') id: string) {
     return this.ememoService.removeMemoCcUser({ id: +id });
   }
@@ -289,20 +291,48 @@ export class EmemoController {
     return this.ememoService.findAllMemoComment();
   }
 
-  @Get(':id/findOneMemoComment')
+  @Get('/findOneMemoComment/:id')
   findOneMemoComment(@Param('id') id: string) {
     return this.ememoService.findOneMemoComment({ id: +id });
   }
 
-  @Patch(':id/updateMemoComment')
+  @Patch('/updateMemoComment/:id')
   updateMemoComment(@Param('id') id: string, @Body() updateMemoCommentDto: UpdateMemoCommentDto) {
     return this.ememoService.updateMemoComment({ id: +id }, updateMemoCommentDto);
   }
 
-  @Delete(':id/removeMemoComment')
+  @Delete('/removeMemoComment/:id')
   removeMemoComment(@Param('id') id: string) {
     return this.ememoService.removeMemoComment({ id: +id });
   }
+
+  @Post('/createMemoStatus')
+  createMemoStatus(@Body() CreateMemoStatusDto: CreateMemoStatusDto) {
+    return this.ememoService.createMemoStatus(CreateMemoStatusDto);
+  }
+
+  @Get('/findAllMemoStatus')
+  findAllMemoStatus() {
+    return this.ememoService.findAllMemoStatus();
+  }
+
+  @Get('/findOneMemoStatus/:id')
+  findOneMemoStatus(@Param('id') id: string) {
+    return this.ememoService.findOneMemoStatus({ id: +id });
+  }
+
+  @Patch('/updateMemoStatus/:id')
+  updateMemoStatus(@Param('id') id: string, @Body() updateMemoStatusDto: UpdateMemoStatusDto) {
+    return this.ememoService.updateMemoStatus({ id: +id }, updateMemoStatusDto);
+  }
+
+  @Delete('/removeMemoStatus/:id')
+  removeMemoStatus(@Param('id') id: string) {
+    return this.ememoService.removeMemoStatus({ id: +id });
+  }
+
+
+
 
   // @Post()
   // create(@Body() createEmemoDto: CreateEmemoDto) {

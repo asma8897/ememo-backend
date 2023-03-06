@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { CreateEmemoDto } from './dto/create-ememo.dto';
-import { UpdateEmemoDto } from './dto/update-ememo.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -14,6 +12,7 @@ import { CreateMemoAttachmentDto } from './dto/create-memo-attachment.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { CreateMemoCCUserDto } from './dto/create-memo-cc-user.dto';
 import { CreateMemoCommentDto } from './dto/create-memo-comment.dto';
+import { CreateMemoStatusDto } from './dto/create-memo-status.dto';
 
 @Injectable()
 export class EmemoService {
@@ -33,12 +32,19 @@ export class EmemoService {
   async createUser(dto: CreateUserDto) {
     return await this.prisma.user.create({
       data: {
+        uid: dto.uid,
         name: dto.name,
         jobTitle: dto.jobTitle,
+        email: dto.email,
+        password: dto.password,
         department: {connect:{id: +dto.departmentId}},
-        company: {connect:{id: +dto.companyId}}
-      }
-    })
+        company: {connect:{id: +dto.companyId}},
+        groups: {
+          connect: dto.groupId.map(grpId => ({id: grpId}))
+          // connect: [{id: 1}, {id: 2}]
+        },
+      },
+    });
   }
 
   findAllUser() {
@@ -46,13 +52,21 @@ export class EmemoService {
       include: {
         department: true,
         company: true,
-      }
+        groups: true,
+        memoCreatedByUser: true,
+        memoUserLoopTo: true,
+      },
     });
   }
 
   findOneUser(UserWhereUniqueInput: Prisma.UserWhereUniqueInput) {
     return this.prisma.user.findUnique({
-      where: UserWhereUniqueInput
+      where: UserWhereUniqueInput,
+      include: {
+        department: true,
+        company: true,
+        groups: true,
+      },
     });
   }
 
@@ -73,17 +87,26 @@ export class EmemoService {
     return await this.prisma.department.create({
       data: {
         name: dto.name,
-      }
-    })
+      },
+    });
   }
 
   findAllDepartment() {
-    return this.prisma.department.findMany();
+    return this.prisma.department.findMany({
+      include: {
+        users: true,
+        memoType: true,
+        memo: true,
+      },
+    });
   }
 
   findOneDepartment(DepartmentWhereUniqueInput: Prisma.DepartmentWhereUniqueInput) {
     return this.prisma.department.findUnique({
-      where: DepartmentWhereUniqueInput
+      where: DepartmentWhereUniqueInput,
+      include: {
+        users: true,
+      },
     });
   }
 
@@ -104,17 +127,24 @@ export class EmemoService {
     return await this.prisma.company.create({
       data: {
         name: dto.name,
-      }
-    })
+      },
+    });
   }
 
   findAllCompany() {
-    return this.prisma.company.findMany();
+    return this.prisma.company.findMany({
+      include: {
+        users: true,
+      },
+    });
   }
 
   findOneCompany(CompanyWhereUniqueInput: Prisma.CompanyWhereUniqueInput) {
     return this.prisma.company.findUnique({
-      where: CompanyWhereUniqueInput
+      where: CompanyWhereUniqueInput,
+      include: {
+        users: true,
+      },
     });
   }
 
@@ -135,8 +165,8 @@ export class EmemoService {
     return await this.prisma.project.create({
       data: {
         name: dto.name,
-      }
-    })
+      },
+    });
   }
 
   findAllProject() {
@@ -166,17 +196,22 @@ export class EmemoService {
     return await this.prisma.memoType.create({
       data: {
         name: dto.name,
-      }
+        department: {connect: { id: +dto.departmentId}},
+      },
     })
   }
 
   findAllMemoType() {
-    return this.prisma.memoType.findMany();
+    return this.prisma.memoType.findMany({
+      include: {
+        department: true,
+      },
+    });
   }
 
   findOneMemoType(MemoTypeWhereUniqueInput: Prisma.MemoTypeWhereUniqueInput) {
     return this.prisma.memoType.findUnique({
-      where: MemoTypeWhereUniqueInput
+      where: MemoTypeWhereUniqueInput,
     });
   }
 
@@ -198,25 +233,59 @@ export class EmemoService {
       data: {
         addressTo: dto.addressTo,
         from: dto.from,
+        subject: dto.subject,
+        content: dto.content, 
         department: {connect:{ id: +dto.departmentId}},
         company: {connect:{ id: +dto.companyId }},
         memoType: {connect:{ id: +dto.memoTypeId }},
-        subject: dto.subject,
-        content: dto.content,
-        createdBy: {connect:{ id: +dto.userId}},
-        project: {connect: { id: +dto.projectId}},
+        projects: {
+          connect: dto.projectId.map(prjId => ({id: prjId}))
+        },
+        status: {connect: { id: +dto.memoStatusId}},
+        createdBy: {connect: { id: +dto.userId}},
         approvals: {
-          create: dto.approvals.map(app => ({...app}))
+          create: [
+            {
+              order: 1,
+              approvedByUser: {connect:{ id: +dto.userId }},
+              groupApproval: {
+                // connect: dto.groupId.map(grpId => ({id: grpId}))
+                connect: { id: +dto.groupId}
+              },
+            },
+          ],
         },
-        memocc: {
-          create: dto.memocc.map(mc => ({...mc}))
-        },
-        attachments: {
-          create: dto.attachments.map(att => ({...att}))
-        },
-        ccusers: {
-          create: dto.ccusers.map(cu => ({...cu}))
-        }
+
+
+        // memoCreatedByUser: {
+        //   connect: dto.createdByUserId.map(crtId => ({id: crtId}))
+        // },
+        // approvals: {
+        //   connect: dto.approvalId.map(apprId => ({id: apprId}))
+        // },
+        // memoAttachments: {
+        //   connect: dto.attachmentId.map(attId => ({id: attId}))
+        // },
+        // memoSelectedCcUser: {
+        //   connect: dto.ccUserId.map(ccId => ({id: ccId}))
+        // },
+
+        // ccusers: {
+        //   connect: dto,
+        // }
+
+        // approvals: {
+        //   create: dto.approvals.map(app => ({...app}))
+        // },
+        // memocc: {
+        //   create: dto.memocc.map(mc => ({...mc}))
+        // },
+        // attachments: {
+        //   create: dto.attachments.map(att => ({...att}))
+        // },
+        // ccusers: {
+        //   create: dto.ccusers.map(cu => ({...cu}))
+        // }
 
         // approvals: {
         //   create: [
@@ -245,6 +314,9 @@ export class EmemoService {
         //   ]
         // }
       },
+      include: {
+        approvals: true,
+      }
     });
   }
 
@@ -253,15 +325,31 @@ export class EmemoService {
       include: {
         department: true,
         company: true,
-        project: true,
+        projects: true,
         memoType: true,
+        status: true,
+        createdBy: true,
+        approvals: true,
+        attachments: true,
+        ccUser: true,
       }
     });
   }
 
   findOneMemo(MemoWhereUniqueInput: Prisma.MemoWhereUniqueInput) {
     return this.prisma.memo.findUnique({
-      where: MemoWhereUniqueInput
+      where: MemoWhereUniqueInput,
+      include: {
+        department: true,
+        company: true,
+        projects: true,
+        memoType: true,
+        status: true,
+        createdBy: true,
+        approvals: true,
+        attachments: true,
+        ccUser: true,
+      }
     });
   }
 
@@ -281,20 +369,42 @@ export class EmemoService {
   async createMemoApproval(dto: CreateMemoApprovalDto) {
     return await this.prisma.memoApproval.create({
       data: {
-        memo: {connect:{ id: +dto.memoId}},
-        group: {connect: {id: +dto.groupId}},
+        // memoApprovedBy: {
+        //   connect: dto.approvedByUserId.map(appBy => ({id: appBy}))
+        // },
+        // memos: {
+        //   connect: dto.memoId.map(mmId => ({id: mmId}))
+        // },
+        // groups: {
+        //   connect: dto.groupId.map(grpId => ({id: grpId}))
+        // },
         order: dto.order,
-      }
-    })
+        // memoStatus: {connect:{ id: +dto.memoStatusId }},
+        approvedByUser: {connect: { id: +dto.userId }},
+        groupApproval: {
+          connect: dto.groupId.map(grpId => ({ id: grpId}))
+        },
+        memo: {connect: { id: +dto.memoId}},
+        // memos: {connect: {id: dto.memoId}},
+        createdOn: dto.createdOn,
+      },
+    });
   }
 
   findAllMemoApproval() {
-    return this.prisma.memoApproval.findMany();
+    return this.prisma.memoApproval.findMany(
+      // include: {
+      //   memos: true,
+      // }
+    );
   }
 
   findOneMemoApproval(MemoApprovalWhereUniqueInput: Prisma.MemoApprovalWhereUniqueInput) {
     return this.prisma.memoApproval.findUnique({
       where: MemoApprovalWhereUniqueInput
+      // include: {
+      //   memos: true,
+      // }
     });
   }
 
@@ -314,33 +424,39 @@ export class EmemoService {
   async createMemoAttachment(dto: CreateMemoAttachmentDto) {
     return await this.prisma.memoAttachment.create({
       data: {
-        memo: {connect: { id: +dto.memoId}},
-        user: {connect:{id: +dto.userId}},
+        // memos: {
+        //   connect: dto.memoId.map(mmId => ({id: mmId}))
+        // },
+        // attachmentCreatedByUser: {
+        //   connect: dto.createdByUserId.map(crtdBy => ({id: crtdBy}))
+        // },
         url: dto.url,
         gspath: dto.gspath,
-        fileName: dto.fileName
-      }
-    })
+        fileName: dto.fileName,
+        memo: {connect: { id: +dto.memoId}},
+        createdByUser: {connect: { id: +dto.userId}},
+      },
+    });
   }
 
   findAllMemoAttachment() {
     return this.prisma.memoAttachment.findMany();
   }
 
-  findOneMemoAttachment(MemoApprovalWhereUniqueInput: Prisma.MemoApprovalWhereUniqueInput) {
+  findOneMemoAttachment(MemoAttachmentWhereUniqueInput: Prisma.MemoAttachmentWhereUniqueInput) {
     return this.prisma.memoAttachment.findUnique({
-      where: MemoApprovalWhereUniqueInput
+      where: MemoAttachmentWhereUniqueInput,
     });
   }
 
-  updateMemoAttachment(where: Prisma.MemoApprovalWhereUniqueInput, data: Prisma.MemoAttachmentUpdateInput) {
+  updateMemoAttachment(where: Prisma.MemoAttachmentWhereUniqueInput, data: Prisma.MemoAttachmentUpdateInput) {
     return this.prisma.memoAttachment.update({
       data,
       where,
     });
   }
 
-  removeMemoAttachment(where: Prisma.MemoApprovalWhereUniqueInput) {
+  removeMemoAttachment(where: Prisma.MemoAttachmentWhereUniqueInput) {
     return this.prisma.memoAttachment.delete({
       where,
     });
@@ -350,17 +466,26 @@ export class EmemoService {
     return await this.prisma.group.create({
       data: {
         name: dto.name,
-      }
-    })
+      },
+    });
   }
 
   findAllGroup() {
-    return this.prisma.group.findMany();
+    return this.prisma.group.findMany({
+      include: {
+        users: true,
+        memoApproval: true,
+      },
+    });
   }
 
   findOneGroup(GroupWhereUniqueInput: Prisma.GroupWhereUniqueInput) {
     return this.prisma.group.findUnique({
-      where: GroupWhereUniqueInput
+      where: GroupWhereUniqueInput,
+      include: {
+        users: true,
+        memoApproval: true,
+      },
     });
   }
 
@@ -380,9 +505,15 @@ export class EmemoService {
   async createMemoCcUser(dto: CreateMemoCCUserDto) {
     return await this.prisma.memoCcUser.create({
       data: {
+        // memos: {
+        //   connect: dto.memoId.map(mmId => ({id: mmId}))
+        // },
+        // memoUserLoop: {
+        //   connect: dto.userId.map(ccId => ({id: ccId}))
+        // },
         memo: {connect: { id: +dto.memoId}},
-        user: {connect: { id: +dto.userId}},
-      }
+        userLoop: {connect: { id: +dto.userId}},
+      },
     });
   }
 
@@ -413,8 +544,9 @@ export class EmemoService {
     return await this.prisma.memoComment.create({
       data: {
         comments: dto.comments,
-      }
-    })
+        commentedByUser: {connect: { id: +dto.userId}},
+      },
+    });
   }
 
   findAllMemoComment() {
@@ -436,6 +568,37 @@ export class EmemoService {
 
   removeMemoComment(where: Prisma.MemoCommentWhereUniqueInput) {
     return this.prisma.memoComment.delete({
+      where,
+    });
+  }
+
+  async createMemoStatus(dto: CreateMemoStatusDto) {
+    return await this.prisma.memoStatus.create({
+      data: {
+        name: dto.name
+      },
+    });
+  }
+
+  findAllMemoStatus() {
+    return this.prisma.memoStatus.findMany();
+  }
+
+  findOneMemoStatus(MemoStatusWhereUniqueInput: Prisma.MemoStatusWhereUniqueInput) {
+    return this.prisma.memoStatus.findUnique({
+      where: MemoStatusWhereUniqueInput
+    });
+  }
+
+  updateMemoStatus(where: Prisma.MemoStatusWhereUniqueInput, data: Prisma.MemoStatusUpdateInput) {
+    return this.prisma.memoStatus.update({
+      data,
+      where,
+    });
+  }
+
+  removeMemoStatus(where: Prisma.MemoStatusWhereUniqueInput) {
+    return this.prisma.memoStatus.delete({
       where,
     });
   }

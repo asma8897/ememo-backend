@@ -1,7 +1,10 @@
 export class CreateUserDto {
+    uid: string;
     name: string;
-    departmentId: number;
     jobTitle: string;
+    email: string;
+    password: string;
+    departmentId: number;
     companyId: number;
     createdOn: Date;
     updatedOn: Date;
@@ -10,4 +13,5 @@ export class CreateUserDto {
     deletedById: number;
     deletedOn: Date;
     status: "ACTIVE" | "DELETED";
+    groupId: number[];
 }

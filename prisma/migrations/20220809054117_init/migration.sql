@@ -13,8 +13,8 @@ CREATE TABLE `User` (
     `departmentId` INTEGER NOT NULL,
     `companyId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `User_departmentId_key`(`departmentId`),
-    UNIQUE INDEX `User_companyId_key`(`companyId`),
+    -- UNIQUE INDEX `User_departmentId_key`(`departmentId`),
+    -- UNIQUE INDEX `User_companyId_key`(`companyId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -86,7 +86,7 @@ CREATE TABLE `Memo` (
     `createdOn` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedOn` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `submittedOn` DATETIME(3) NULL,
-    `status` ENUM('ACTIVE', 'DELETED') NOT NULL DEFAULT 'ACTIVE',
+    -- `status` ENUM('ACTIVE', 'DELETED') NOT NULL DEFAULT 'ACTIVE',
     `subject` VARCHAR(191) NULL,
     `content` LONGTEXT NULL,
     `executiveChairman` BOOLEAN NOT NULL,
@@ -95,11 +95,12 @@ CREATE TABLE `Memo` (
     `userId` INTEGER NOT NULL,
     `projectId` INTEGER NOT NULL,
     `memoTypeId` INTEGER NOT NULL,
+    `memoStatusId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `Memo_departmentId_key`(`departmentId`),
-    UNIQUE INDEX `Memo_companyId_key`(`companyId`),
-    UNIQUE INDEX `Memo_projectId_key`(`projectId`),
-    UNIQUE INDEX `Memo_memoTypeId_key`(`memoTypeId`),
+    -- UNIQUE INDEX `Memo_departmentId_key`(`departmentId`),
+    -- UNIQUE INDEX `Memo_companyId_key`(`companyId`),
+    -- UNIQUE INDEX `Memo_projectId_key`(`projectId`),
+    -- UNIQUE INDEX `Memo_memoTypeId_key`(`memoTypeId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

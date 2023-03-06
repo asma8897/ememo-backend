@@ -1,5 +1,6 @@
 export class CreateMemoTypeDto {
     name: string;
+    departmentId: number;
     createdOn: Date;
     updatedOn: Date;
     createdById: number;

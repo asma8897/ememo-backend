@@ -13,12 +13,13 @@ datasource db {
 // enum example
 enum Status {
   ACTIVE
+  DEACTIVE
   DELETED
 }
 
-enum MemoStatus {
-  PENDING
-}
+// enum MemoStatus {
+//   PENDING
+// }
 
 // model Testing {
 //   id Int @default(autoincrement()) @id
@@ -30,27 +31,26 @@ enum MemoStatus {
 
 model User {
   id Int @default(autoincrement()) @id
+  uid String
   name String
-  department Department @relation("UserDepartment", fields: [departmentId], references: [id])
   jobTitle String
-  company Company @relation("UserCompany", fields: [companyId], references: [id])
+  email String
+  password String
   createdOn DateTime @default(now())
+  deletedOn DateTime?
   updatedOn DateTime?
+  department Department @relation("UserDepartment", fields: [departmentId], references: [id])
+  departmentId Int 
+  company Company @relation("UserCompany", fields: [companyId], references: [id])
+  companyId Int
   createdBy User? @relation("CreatedByUser", fields: [createdById], references: [id])
   createdById Int?
   updatedBy User? @relation("UpdatedByUser", fields: [updatedById], references: [id])
   updatedById Int?
   deletedBy User? @relation("DeletedByUser", fields: [deletedById], references: [id])
   deletedById Int?
-  deletedOn DateTime?
   status Status @default(ACTIVE)
-
-  departmentId Int @unique
-  companyId Int @unique
-  
-  // approvals MemoApproval[]
-  memos Memo[]
-  memocc MemoCcUser[]
+  memoUserLoopTo MemoCcUser[] @relation("MemoUserLoop")
   createdDepartment Department[] @relation("CreatedByDepartment")
   updatedDepartment Department[] @relation("UpdatedByDepartment")
   deletedDepartment Department[] @relation("DeletedByDepartment")
@@ -60,17 +60,29 @@ model User {
   createdCompany Company[] @relation("CreatedByCompany")
   updatedCompany Company[] @relation("UpdatedByCompany")
   deletedCompany Company[] @relation("DeletedByCompany")
-  createdMemo Memo[] @relation("CreatedByMemo")
   createdProject Project[] @relation("CreatedByProject")
   updatedProject Project[] @relation("UpdatedByProject")
   deletedProject Project[] @relation("DeletedByProject")
   createdMemoType MemoType[] @relation("CreatedByMemoType")
   updatedMemoType MemoType[] @relation("UpdatedByMemoType")
   deletedMemoType MemoType[] @relation("DeletedByMemoType")
-  memoAttachmentUser MemoAttachment[] @relation("MemoAttachmentUser")
-  memoCommentUser MemoComment[] @relation("MemoCommentUser")
-  groupUser Group[] @relation("GroupUser")
-  
+  attachmentCreatedByUser MemoAttachment[] @relation("MemoAttachmentCreatedByUser")
+  commentedByUser MemoComment[] @relation("MemoCommentUser")
+  approvedByUser MemoApproval[] @relation("MemoApproverUser")
+  groups Group[] @relation("UserGroup")  
+  memoCreatedByUser Memo[] @relation("MemoCreatedByUser")
+
+  // approvals MemoApproval[]
+  // memos Memo[]
+  // createdMemo Memo[] @relation("CreatedByMemo")
+
+}
+
+model Group {
+  id Int @default(autoincrement()) @id
+  name String
+  users User[] @relation("UserGroup")
+  memoApproval MemoApproval[] @relation("MemoGroup")
 }
 
 model Department {
@@ -86,10 +98,10 @@ model Department {
   deletedBy User? @relation("DeletedByDepartment", fields: [deletedById], references: [id])
   deletedById Int?
   deletedOn DateTime?
-
   users User[] @relation("UserDepartment")
-  memo Memo?
-  
+  // memo Memo?
+  memo Memo [] @relation("MemoDepartment")
+  memoType MemoType[] @relation("MemoTypeDepartment") 
 }
 
 model Company {
@@ -105,9 +117,9 @@ model Company {
   deletedBy User? @relation("DeletedByCompany", fields: [deletedById], references: [id])
   deletedById Int?
   deletedOn DateTime?
-
   users User[] @relation("UserCompany")
-  memo Memo?
+  // memo Memo?
+  memo Memo[] @relation("MemoCompany")
 }
 
 model Project {
@@ -123,14 +135,15 @@ model Project {
   deletedById Int?
   deletedOn DateTime?
   status Status @default(ACTIVE)
-  
-  memo Memo? @relation("MemoProject")  
-  
+  // memo Memo? @relation("MemoProject")  
+  memo Memo [] @relation("MemoProject")
 }
 
 model MemoType {
   id Int @default(autoincrement()) @id
   name String
+  department Department? @relation("MemoTypeDepartment", fields: [departmentId], references: [id])
+  departmentId Int
   createdOn DateTime? @default(now())
   updatedOn DateTime?
   createdBy User? @relation("CreatedByMemoType", fields: [createdById], references: [id])
@@ -141,88 +154,112 @@ model MemoType {
   deletedById Int?
   deletedOn DateTime?
   status Status @default(ACTIVE)
-  memo Memo? @relation("MemoType")
-  
+  // memo Memo? @relation("MemoType")
+  memo Memo[] @relation("MemosType")
 }
 
 model Memo {
   id Int @default(autoincrement()) @id
   addressTo String
   from String
-  department Department @relation(fields: [departmentId], references: [id])
-  company Company @relation(fields: [companyId], references: [id])
-  project Project? @relation("MemoProject", fields: [projectId], references: [id])
-  memoType MemoType @relation("MemoType", fields: [memoTypeId], references: [id])
+  department Department @relation("MemoDepartment", fields: [departmentId], references: [id])
+  departmentId Int 
+  company Company @relation("MemoCompany", fields: [companyId], references: [id])
+  companyId Int 
+  memoType MemoType @relation("MemosType", fields: [memoTypeId], references: [id])
+  memoTypeId Int 
+  createdBy User @relation("MemoCreatedByUser", fields: [userId], references: [id])
+  userId Int
+  status MemoStatus @relation("MemoStatus", fields: [memoStatusId], references: [id])
+  memoStatusId Int 
   createdOn DateTime @default(now())
   updatedOn DateTime @default(now())
-  submittedOn DateTime?
-  createdBy User? @relation("CreatedByMemo", fields: [userId], references: [id])
-  status Status @default(ACTIVE)
+  submittedOn DateTime @default(now())
   subject String
   content String @db.LongText
   executiveChairman Boolean?
 
-  departmentId Int @unique
-  companyId Int @unique
-  userId Int
-  projectId Int @unique
-  memoTypeId Int @unique
-  
-  approvals MemoApproval[]
-  memocc User[] 
-  attachments MemoAttachment[]
-  ccusers MemoCcUser[] @relation("MemoCcUserId")
+  approvals MemoApproval[] @relation("MemoApprover")
+  attachments MemoAttachment[] @relation("MemoAttachment")
+  ccUser MemoCcUser[] @relation("MemoCcUser")
+  projects Project[] @relation("MemoProject")
+  // memoCreatedByUser User[] @relation("MemoCreatedByUser")
+
+  // createdBy User? @relation("CreatedByMemo", fields: [userId], references: [id])
+  // userId Int
 }
 
 model MemoApproval {
   id Int @default(autoincrement()) @id
-  memo Memo? @relation(fields: [memoId], references: [id])
-  group Group? @relation(fields: [groupId], references: [id])
-  // user User @relation(fields: [userId], references: [id])
   order Int
-  memoStatus MemoStatus @default(PENDING)
+  // memoStatus MemoStatus? @relation(fields: [memoStatusId], references: [id]) 
+  // memoStatusId Int 
+  approvedByUser User @relation("MemoApproverUser", fields: [userId], references: [id])
+  userId Int
+  // groupApproval Group @relation("MemoGroup", fields: [groupId], references: [id])
+  // groupId Int
+  memo Memo @relation("MemoApprover", fields: [memoId], references: [id])
+  memoId Int
+  createdOn DateTime @default(now())
+  groupApproval Group[] @relation("MemoGroup")
+  
+  // memos Memo[] @relation("MemoApprover")
+  // memoApprovedBy User[] @relation("MemoApproverUser")
 
-  memoId Int @unique
-  groupId Int @unique
-  // userId Int 
-
+  // memo Memo? @relation(fields: [memoId], references: [id])
+  // group Group? @relation(fields: [groupId], references: [id])
+  // memoId Int @unique
+  // groupId Int
+  // userId Int
 }
 
 model MemoAttachment {
   id Int @default(autoincrement()) @id
-  memo Memo? @relation(fields: [memoId], references: [id])
-  user User @relation("MemoAttachmentUser", fields: [userId], references: [id])
   url String
   gspath String
   fileName String
-
-  memoId Int @unique
+  memo Memo @relation("MemoAttachment", fields: [memoId], references: [id])
+  memoId Int
+  createdByUser User @relation("MemoAttachmentCreatedByUser", fields: [userId], references: [id])
   userId Int
-}
 
-model Group {
-  id Int @default(autoincrement()) @id
-  name String
-  users User[] @relation("GroupUser")
+  // memos Memo[] @relation("MemoAttachment")
+  // attachmentCreatedByUser User[] @relation("MemoAttachmentCreatedByUser")
 
-  approvals MemoApproval[]
+  // memo Memo? @relation(fields: [memoId], references: [id])
+  // user User @relation("MemoAttachmentUser", fields: [userId], references: [id])
+  // memoId Int @unique
+  // userId Int
 }
 
 model MemoCcUser {
   id Int @default(autoincrement()) @id
-  memo Memo @relation("MemoCcUserId", fields: [memoId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
-
-  memoId Int @unique
+  memo Memo @relation("MemoCcUser", fields: [memoId], references: [id])
+  memoId Int
+  userLoop User @relation("MemoUserLoop", fields: [userId], references: [id])
   userId Int
 
+  // memos Memo[] @relation("MemoCcUser")
+  // memoUserLoop User[] @relation("MemoUserLoop")
+
+  // memo Memo @relation("MemoCcUserId", fields: [memoId], references: [id])
+  // user User? @relation(fields: [userId], references: [id])
+  // memoId Int @unique
+  // userId Int
 }
 
 model MemoComment {
   id Int @default(autoincrement()) @id
   comments String
-  users User[] @relation("MemoCommentUser")
+  commentedByUser User @relation("MemoCommentUser", fields: [userId], references: [id])
+  userId Int
+}
 
+model MemoStatus {
+  id Int @default(autoincrement()) @id
+  name String
+  memo Memo[] @relation("MemoStatus")
+  // memoApproval MemoApproval[]
 }
 
 // model test {
